@@ -1,19 +1,31 @@
 import { REFERENCE_CANVAS_SIZE, ROBOT_SIZE } from "./constants";
 import { DEG_TO_RAD, Matrix3, Point, clamp, clampAngle } from "./math";
 
-export class Robot {
-  x = 100;
-  y = 100;
-  heading = 0;
+export interface Robot {
+  x: number;
+  y: number;
+  heading: number;
 
-  vx = 3;
-  vy = 4;
-  vh = 2 * DEG_TO_RAD;
+  vx: number;
+  vy: number;
+  vh: number;
 
-  forwardPower = 0;
-  sidewaysPower = 0;
-  angularPower = 0;
+  forwardPower: number;
+  sidewaysPower: number;
+  angularPower: number;
 }
+
+export const DEFAULT_ROBOT: Readonly<Robot> = {
+  x: 100,
+  y: 100,
+  heading: 0,
+  vx: 8,
+  vy: 12,
+  vh: 6 * DEG_TO_RAD,
+  forwardPower: 0,
+  sidewaysPower: 0,
+  angularPower: 0,
+};
 
 export function moveRobot(robot: Robot) {
   robot.heading += clampAngle(robot.angularPower * robot.vh);

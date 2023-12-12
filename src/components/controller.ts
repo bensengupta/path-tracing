@@ -1,14 +1,9 @@
 import { createEffect, createSignal, onCleanup } from "solid-js";
 import { createStore } from "solid-js/store";
 import { runGuidedOpMode } from "./canvas/logic/opmode";
-import { Robot, drawRobot, moveRobot } from "./canvas/logic/robot";
-import { clearCanvas } from "./canvas/logic/utils";
-import {
-  Waypoint,
-  drawLinesBetweenWaypoints,
-  drawWaypoint,
-  registerWaypointClickListener,
-} from "./canvas/logic/waypoint";
+import { DEFAULT_ROBOT } from "./canvas/logic/robot";
+import { Waypoint } from "./canvas/logic/waypoint";
+import { initScene } from "./canvas/logic/main";
 
 const INITIAL_WAYPOINTS = [
   new Waypoint(100, 100),
@@ -24,57 +19,40 @@ function useWaypoints() {
   }
 
   function resetWaypoints() {
-    setWaypoints([]);
+    setWaypoints(INITIAL_WAYPOINTS);
   }
 
   return { waypoints, addWaypoint, resetWaypoints };
 }
 
 export function useController() {
-  let robot = new Robot();
-  const cleanupCallbacks: (() => void)[] = [];
+  const robot = { ...DEFAULT_ROBOT };
+  let cleanupCallback = () => {};
 
   const [canvasRef, setCanvasRef] = createSignal<HTMLCanvasElement>();
   const { waypoints, addWaypoint, resetWaypoints } = useWaypoints();
-
-  function drawLoop() {
-    const canvas = canvasRef()!;
-
-    clearCanvas(canvas);
-
-    drawLinesBetweenWaypoints(canvas, waypoints);
-    waypoints.forEach((wp) => {
-      drawWaypoint(canvas, wp);
-    });
-
-    moveRobot(robot);
-    drawRobot(canvas, robot);
-
-    requestAnimationFrame(drawLoop);
-  }
 
   createEffect(() => {
     const canvas = canvasRef();
     if (!canvas) {
       return;
     }
-    requestAnimationFrame(drawLoop);
-    cleanupCallbacks.push(registerWaypointClickListener(canvas, addWaypoint));
+    cleanupCallback = initScene(canvas, robot, waypoints, addWaypoint);
   });
 
-  onCleanup(() => {
-    cleanupCallbacks.forEach((cb) => cb());
-  });
+  onCleanup(cleanupCallback);
 
   function start() {
-    runGuidedOpMode(robot);
+    runGuidedOpMode(robot, waypoints);
   }
 
   function reset() {
     // Note: doesn't cancel async functions
-    robot = new Robot();
+    robot.x = DEFAULT_ROBOT.x;
+    robot.y = DEFAULT_ROBOT.y;
+    robot.heading = DEFAULT_ROBOT.heading;
     resetWaypoints();
   }
 
-  return { setCanvasRef, start, reset };
+  return { setCanvasRef, waypoints, start, reset };
 }

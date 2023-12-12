@@ -7,13 +7,15 @@ import {
 import { Matrix3, Point } from "./math";
 
 export class Waypoint {
+  reached = false;
+
   constructor(
     public x: number,
     public y: number,
   ) {}
 }
 
-export function drawWaypoint(canvas: HTMLCanvasElement, waypoint: Waypoint) {
+function drawWaypoint(canvas: HTMLCanvasElement, waypoint: Waypoint) {
   const scaleFactor = canvas.height / REFERENCE_CANVAS_SIZE;
 
   const transform = Matrix3.identity()
@@ -23,12 +25,20 @@ export function drawWaypoint(canvas: HTMLCanvasElement, waypoint: Waypoint) {
   const ctx = canvas.getContext("2d")!;
 
   const centerPoint = Point.origin().transform(transform);
+  const radius = WAYPOINT_RADIUS * scaleFactor;
 
   ctx.beginPath();
-  ctx.arc(centerPoint.x, centerPoint.y, WAYPOINT_RADIUS, 0, Math.PI * 2, true);
+  ctx.arc(centerPoint.x, centerPoint.y, radius, 0, Math.PI * 2, true);
   ctx.closePath();
   ctx.fillStyle = WAYPOINT_COLOR;
   ctx.fill();
+}
+
+export function drawWaypoints(
+  canvas: HTMLCanvasElement,
+  waypoints: Waypoint[],
+) {
+  waypoints.forEach((wp) => drawWaypoint(canvas, wp));
 }
 
 function drawLineBetweenTwoWaypoints(
